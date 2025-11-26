@@ -1,21 +1,14 @@
-import { Stack } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { ClerkProvider } from "@clerk/clerk-expo";
-import { tokenCache } from "@clerk/clerk-expo/token-cache";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import InitialLayout from "@/components/InitialLayout";
+import ClerkAndConvexProvider from "@/providers/ClerkAndConvexProvider";
 
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
-  unsavedChangesWarning: false,
-});
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   return (
-    <ClerkProvider tokenCache={tokenCache}>
-      <ConvexProvider client={convex}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
-          <Stack screenOptions={{ headerShown: false }} />;
-        </SafeAreaView>
-      </ConvexProvider>
-    </ClerkProvider>
+    <ClerkAndConvexProvider>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+        <InitialLayout />
+      </SafeAreaView>
+    </ClerkAndConvexProvider>
   );
 }
