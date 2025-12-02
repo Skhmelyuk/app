@@ -27,7 +27,7 @@ export const createUser = mutation({
       clerkId: args.clerkId,
       followers: 0,
       following: 0,
-      post: 0,
+      posts: 0,
     });
   },
 });
