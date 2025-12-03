@@ -1,31 +1,25 @@
-import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { mutation, query } from './_generated/server';
+import { v } from 'convex/values';
+import { getAuthenticatedUser } from './users';
 
 export const generateUploadUrl = mutation(async (ctx) => {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Unauthorized");
+  if (!identity) throw new Error('Unauthorized');
   return await ctx.storage.generateUploadUrl();
 });
 
 export const createPost = mutation({
   args: {
     caption: v.optional(v.string()),
-    storageId: v.id("_storage"),
+    storageId: v.id('_storage'),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!currentUser) throw new Error("User not found");
+    const currentUser = await getAuthenticatedUser(ctx);
 
     const imageUrl = await ctx.storage.getUrl(args.storageId);
-    if (!imageUrl) throw new Error("Image URL not found");
+    if (!imageUrl) throw new Error('Image URL not found');
 
-    const postId = await ctx.db.insert("posts", {
+    const postId = await ctx.db.insert('posts', {
       userId: currentUser._id,
       imageUrl,
       storageId: args.storageId,
@@ -43,42 +37,95 @@ export const createPost = mutation({
 
 export const getFeedPosts = query({
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-    if (!currentUser) throw new Error("User not found");
+    const currentUser = await getAuthenticatedUser(ctx);
 
     // Отримання всіх постів
-    const posts = await ctx.db.query("posts").order("desc").collect();
+    const posts = await ctx.db.query('posts').order('desc').collect();
     if (posts.length === 0) return [];
 
     const postsInfo = await Promise.all(
       posts.map(async (post) => {
-        const postAuthor = await ctx.db.get(post.userId);
+        const postAuthor = (await ctx.db.get(post.userId))!;
 
-        const like = await ctx.db.query("likes").withIndex("by_user_and_post",
-          (q) => q.eq("userId", currentUser._id).eq("postId", post._id)).first()
+        const like = await ctx.db
+          .query('likes')
+          .withIndex('by_user_and_post', (q) =>
+            q.eq('userId', currentUser._id).eq('postId', post._id)
+          )
+          .first();
 
-        const bookmarks = await ctx.db.query("bookmarks").withIndex("by_user_and_post",
-           (q) => q.eq("userId", currentUser._id).eq("postId", post._id)).first()
+        const bookmarks = await ctx.db
+          .query('bookmarks')
+          .withIndex('by_user_and_post', (q) =>
+            q.eq('userId', currentUser._id).eq('postId', post._id)
+          )
+          .first();
 
         return {
           ...post,
           author: {
-            _id: postAuthor?._id,
-            username: postAuthor?.username,
-            image: postAuthor?.image
+            _id: postAuthor._id,
+            username: postAuthor.username,
+            image: postAuthor.image,
           },
           isLiked: !!like,
-          isBookmarked: !!bookmarks
-        }
+          isBookmarked: !!bookmarks,
+        };
       })
-    )
+    );
 
-    return postsInfo
-  }
-})
+    return postsInfo;
+  },
+});
+
+export const toggleLike = mutation({
+  args: {
+    postId: v.id('posts'),
+  },
+  handler: async (ctx, args) => {
+    // 1. Отримання юзера
+    const currentUser = await getAuthenticatedUser(ctx);
+
+    // 2. Перевірка, чи лайк поставлений
+    const like = await ctx.db
+      .query('likes')
+      .withIndex('by_user_and_post', (q) =>
+        q.eq('userId', currentUser._id).eq('postId', args.postId)
+      )
+      .first();
+
+    // 3. Отримання посту
+    const post = await ctx.db.get(args.postId);
+    if (!post) throw new Error('Post not found');
+
+    // 4. Toggle логіка
+    if (like) {
+      // UNLIKE: видаляємо лайк
+      await ctx.db.delete(like._id);
+      await ctx.db.patch(post._id, {
+        likes: post.likes - 1,
+      });
+      return false; // unliked
+    } else {
+      // LIKE: додаємо лайк
+      await ctx.db.insert('likes', {
+        userId: currentUser._id,
+        postId: args.postId,
+      });
+      await ctx.db.patch(post._id, {
+        likes: post.likes + 1,
+      });
+
+      // 5. Створення notification (якщо не свій пост)
+      if (currentUser._id !== post.userId) {
+        await ctx.db.insert('notifications', {
+          type: 'like',
+          receiverId: post.userId,
+          senderId: currentUser._id,
+          postId: args.postId,
+        });
+      }
+      return true; // liked
+    }
+  },
+});
