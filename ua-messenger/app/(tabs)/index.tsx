@@ -5,7 +5,7 @@ import { styles } from "@/styles/feed.styles";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants/theme";
 import { STORIES } from "@/constants/mock-data";
-import { Story } from "@/components/Story";
+import { Storie } from "@/components/Storie";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Post } from "@/components/Post";
@@ -32,7 +32,7 @@ export default function Index() {
           showsHorizontalScrollIndicator={false}
           style={styles.storiesContainer}>
           {STORIES.map((story) => (
-            <Story key={story.id} story={story} />
+            <Storie key={story.id} story={story} />
           ))}
       </ScrollView>
 
