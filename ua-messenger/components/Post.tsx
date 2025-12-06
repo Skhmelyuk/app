@@ -7,8 +7,10 @@ import { COLORS } from '@/constants/theme';
 import { Id } from '@/convex/_generated/dataModel';
 import { formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { CommentsModal } from './CommentsModal';
+import { useUser } from '@clerk/clerk-expo';
 
 interface PostProps {
   post: {
@@ -31,10 +33,21 @@ interface PostProps {
 export const Post = ({ post }: PostProps) => {
   // Оптимістичне оновлення
   const [isLiked, setIsLiked] = useState(post.isLiked);
+  const [showModal, setShowModal] = useState(false);
+
   const [likesCount, setLikesCount] = useState(post.likes);
+  const [commentsCount, setCommentsCount] = useState(post.comments);
+  const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked);
 
   //  Convex mutations
   const toggleLike = useMutation(api.posts.toggleLike);
+  const toggleBookmark = useMutation(api.bookmarks.toggleBookmark);
+
+  const { user } = useUser();
+
+  const currentUser = useQuery(api.users.getUserByClerkId, user ? { clerkId: user.id } : 'skip');
+
+  const deletePost = useMutation(api.posts.deletePost);
 
   const handleLike = async () => {
     try {
@@ -43,6 +56,23 @@ export const Post = ({ post }: PostProps) => {
       setLikesCount((prev) => (newIsLiked ? prev + 1 : prev - 1));
     } catch (error) {
       console.log('Error like: ', error);
+    }
+  };
+
+  const handleBookmark = async () => {
+    try {
+      const newIsBookmark = await toggleBookmark({ postId: post._id });
+      setIsBookmarked(newIsBookmark);
+    } catch (error) {
+      console.error('Error', error);
+    }
+  };
+
+  const handleDeletePost = async () => {
+    try {
+      await deletePost({ postId: post._id });
+    } catch (error) {
+      console.error('Error', error);
     }
   };
 
@@ -61,9 +91,15 @@ export const Post = ({ post }: PostProps) => {
             <Text style={styles.postUsername}>{post.author.username}</Text>
           </TouchableOpacity>
         </Link>
-        <TouchableOpacity>
-          <Ionicons name="trash-outline" size={20} color={COLORS.primary} />
-        </TouchableOpacity>
+        {post.author._id === currentUser?._id ? (
+          <TouchableOpacity onPress={handleDeletePost}>
+            <Ionicons name="trash-outline" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity>
+            <Ionicons name="ellipsis-horizontal-outline" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
       </View>
       <Image
         source={post.imageUrl}
@@ -82,12 +118,20 @@ export const Post = ({ post }: PostProps) => {
               color={isLiked ? COLORS.primary : COLORS.white}
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}}>
-            <Ionicons name="chatbubble-outline" size={22} color={COLORS.white} />
+          <TouchableOpacity onPress={() => setShowModal(true)}>
+            <Ionicons
+              name={commentsCount > 0 ? 'chatbubble' : 'chatbubble-outline'}
+              size={22}
+              color={commentsCount > 0 ? COLORS.primary : COLORS.white}
+            />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => {}}>
-          <Ionicons name={'bookmark-outline'} size={22} color={COLORS.white} />
+        <TouchableOpacity onPress={handleBookmark}>
+          <Ionicons
+            name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
+            size={22}
+            color={isBookmarked ? COLORS.primary : COLORS.white}
+          />
         </TouchableOpacity>
       </View>
       {/* POST INFO */}
@@ -106,9 +150,9 @@ export const Post = ({ post }: PostProps) => {
         )}
 
         {/* Кількість коментарів (якщо є) */}
-        {post.comments > 0 && (
-          <TouchableOpacity onPress={() => {}}>
-            <Text style={styles.commentsText}>View all {post.comments} comments</Text>
+        {commentsCount && (
+          <TouchableOpacity onPress={() => setShowModal(true)}>
+            <Text style={styles.commentsText}>View all {commentsCount} comments</Text>
           </TouchableOpacity>
         )}
 
@@ -117,6 +161,13 @@ export const Post = ({ post }: PostProps) => {
           {formatDistanceToNow(post._creationTime, { addSuffix: true })}
         </Text>
       </View>
+
+      <CommentsModal
+        postId={post._id}
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        onCommentsAdd={() => setCommentsCount(commentsCount + 1)}
+      />
     </View>
   );
 };
