@@ -15,10 +15,8 @@ interface CommentProps {
 export function Comment({ comment }: { comment: CommentProps }) {
   return (
     <View style={styles.commentContainer}>
-      {/* Аватар користувача */}
       <Image source={{ uri: comment.user.image }} style={styles.commentAvatar} />
 
-      {/* Контент коментаря */}
       <View style={styles.commentContent}>
         <Text style={styles.commentUsername}>{comment.user.fullname}</Text>
         <Text style={styles.commentText}>{comment.content}</Text>

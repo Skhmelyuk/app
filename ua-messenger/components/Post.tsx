@@ -108,7 +108,6 @@ export const Post = ({ post }: PostProps) => {
         cachePolicy="memory-disk"
         transition={200}
       />
-      {/* POST ACTIONS */}
       <View style={styles.postActions}>
         <View style={styles.postActionsLeft}>
           <TouchableOpacity onPress={handleLike}>
@@ -134,14 +133,12 @@ export const Post = ({ post }: PostProps) => {
           />
         </TouchableOpacity>
       </View>
-      {/* POST INFO */}
+
       <View style={styles.postInfo}>
-        {/* Кількість лайків */}
         <Text style={styles.likesText}>
           {likesCount > 0 ? `${likesCount.toLocaleString()} likes` : 'Be the first to like'}
         </Text>
 
-        {/* Caption (якщо є) */}
         {post.caption && (
           <View style={styles.captionContainer}>
             <Text style={styles.captionUsername}>{post.author.username}</Text>
@@ -149,14 +146,12 @@ export const Post = ({ post }: PostProps) => {
           </View>
         )}
 
-        {/* Кількість коментарів (якщо є) */}
         {commentsCount && (
           <TouchableOpacity onPress={() => setShowModal(true)}>
             <Text style={styles.commentsText}>View all {commentsCount} comments</Text>
           </TouchableOpacity>
         )}
 
-        {/* Час створення */}
         <Text style={styles.timeAgo}>
           {formatDistanceToNow(post._creationTime, { addSuffix: true })}
         </Text>

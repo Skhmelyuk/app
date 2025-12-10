@@ -58,7 +58,6 @@ export function CommentsModal({ postId, visible, onClose, onCommentsAdd }: Comme
           <View style={{ width: 24 }} />
         </View>
 
-        {/* Comments List */}
         {comments === undefined ? (
           <Loader />
         ) : (
@@ -75,7 +74,6 @@ export function CommentsModal({ postId, visible, onClose, onCommentsAdd }: Comme
           />
         )}
 
-        {/* Input */}
         <View style={styles.commentInput}>
           <TextInput
             style={styles.input}
