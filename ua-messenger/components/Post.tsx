@@ -79,7 +79,12 @@ export const Post = ({ post }: PostProps) => {
   return (
     <View style={styles.post}>
       <View style={styles.postHeader}>
-        <Link href={`/(tabs)/notifications`}>
+        <Link
+          href={
+            currentUser?._id === post.author._id ? `/(tabs)/profile` : `/user/${post.author._id}`
+          }
+          asChild
+        >
           <TouchableOpacity style={styles.postHeaderLeft}>
             <Image
               source={post.author.image}
@@ -139,14 +144,14 @@ export const Post = ({ post }: PostProps) => {
           {likesCount > 0 ? `${likesCount.toLocaleString()} likes` : 'Be the first to like'}
         </Text>
 
-        {post.caption && (
+        {!!post.caption && (
           <View style={styles.captionContainer}>
             <Text style={styles.captionUsername}>{post.author.username}</Text>
             <Text style={styles.captionText}>{post.caption}</Text>
           </View>
         )}
 
-        {commentsCount && (
+        {commentsCount > 0 && (
           <TouchableOpacity onPress={() => setShowModal(true)}>
             <Text style={styles.commentsText}>View all {commentsCount} comments</Text>
           </TouchableOpacity>

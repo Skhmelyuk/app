@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/clerk-expo';
-import { FlatList, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { styles } from '@/styles/feed.styles';
@@ -30,18 +30,16 @@ export default function Index() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <FlatList
-          data={posts}
-          keyExtractor={(item) => item._id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingBottom: 60,
-          }}
-          renderItem={({ item }) => <Post post={item} />}
-          ListHeaderComponent={<StoriesSection />}
-        />
-      </ScrollView>
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item._id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: 60,
+        }}
+        renderItem={({ item }) => <Post post={item} />}
+        ListHeaderComponent={<StoriesSection />}
+      />
     </View>
   );
 }

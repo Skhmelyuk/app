@@ -1,23 +1,35 @@
-import { useAuth } from '@clerk/clerk-expo';
-import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-expo';
+import * as SplashScreen from 'expo-splash-screen';
+import { Stack, useRouter, useSegments } from 'expo-router';
 
 export default function InitialLayout() {
   const { isSignedIn, isLoaded } = useAuth();
 
-  const segmants = useSegments();
+  const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoaded) return;
 
-    const inAuthScreen = segmants[0] === '(auth)';
-    if (!isSignedIn && !inAuthScreen) {
-      router.replace('/(auth)/login');
-    } else if (isSignedIn && inAuthScreen) {
-      router.replace('/(tabs)');
+    const inAuthScreen = segments[0] === '(auth)';
+
+    // Якщо користувач залогінений — забороняємо тільки auth-екрани.
+    // Інші роути (наприклад /user/[id]) мають відкриватися без редіректу.
+    if (isSignedIn) {
+      if (inAuthScreen) {
+        router.replace('/(tabs)');
+      }
+    } else {
+      // Якщо НЕ залогінений — дозволяємо тільки auth-екрани.
+      if (!inAuthScreen) {
+        router.replace('/(auth)/login');
+      }
     }
-  }, [isSignedIn, isLoaded, segmants, router]);
+
+    // Ховаємо splash тільки після редіректу
+    SplashScreen.hideAsync();
+  }, [isSignedIn, isLoaded, segments, router]);
 
   if (!isLoaded) {
     return null;
