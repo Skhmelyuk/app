@@ -48,6 +48,7 @@ export default function UserProfileScreen() {
                 style={styles.avatar}
                 contentFit="cover"
                 transition={200}
+                cachePolicy={'memory-disk'}
               />
             </View>
 
@@ -90,6 +91,7 @@ export default function UserProfileScreen() {
                 style={styles.gridImage}
                 contentFit="cover"
                 transition={200}
+                cachePolicy={'memory-disk'}
               />
             </TouchableOpacity>
           )}
