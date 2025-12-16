@@ -1,10 +1,10 @@
-import { AuthConfig } from "convex/server";
+import { AuthConfig } from 'convex/server';
 
 export default {
   providers: [
     {
-      domain: "https://new-dory-94.clerk.accounts.dev",
-      applicationID: "convex",
+      domain: process.env.CLERK_JWT_ISSUER_DOMAIN!,
+      applicationID: 'convex',
     },
   ],
 } satisfies AuthConfig;
