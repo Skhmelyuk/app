@@ -6,6 +6,7 @@ import { Loader } from '@/components/Loader';
 import { COLORS } from '@/constants/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function BookmarksScreen() {
   const { isAuthenticated } = useConvexAuth();
@@ -20,22 +21,24 @@ export default function BookmarksScreen() {
         <Text style={styles.headerTitle}>Bookmarks</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 8, flexDirection: 'row', flexWrap: 'wrap' }}>
-        {bookmarks.map((post) => {
-          if (!post) return null;
-          return (
-            <View key={post._id} style={{ padding: 2, width: '33.33%' }}>
-              <Image
-                source={{ uri: post.imageUrl }}
-                style={{ width: '100%', aspectRatio: 1 }}
-                contentFit="cover"
-                transition={200}
-                cachePolicy={'memory-disk'}
-              />
-            </View>
-          );
-        })}
-      </ScrollView>
+      <LinearGradient colors={COLORS.gradients.background} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ padding: 8, flexDirection: 'row', flexWrap: 'wrap' }}>
+          {bookmarks.map((post) => {
+            if (!post) return null;
+            return (
+              <View key={post._id} style={{ padding: 2, width: '33.33%' }}>
+                <Image
+                  source={{ uri: post.imageUrl }}
+                  style={{ width: '100%', aspectRatio: 1 }}
+                  contentFit="cover"
+                  transition={200}
+                  cachePolicy={'memory-disk'}
+                />
+              </View>
+            );
+          })}
+        </ScrollView>
+      </LinearGradient>
     </View>
   );
 }
